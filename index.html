@@ -1,5 +1,10 @@
-git add index.html
-git commit -m "Add qrapp index.html"
-git branch -M main
-git push -u origin main
-
+</body>
+<script>
+if ("serviceWorker" in navigator) {
+  window.addEventListener("load", () => {
+    navigator.serviceWorker.register("./sw.js")
+      .then(() => console.log("Service Worker يعمل"))
+      .catch(err => console.log("Service Worker Error:", err));
+  });
+}
+</script>
