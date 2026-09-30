@@ -1,7 +1,5 @@
-const CACHE = 'qrapp-v1';
-const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png',
-  'https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js',
-  'https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js'];
+const CACHE = 'qrapp-v2';
+const CORE = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png'];
 self.addEventListener('install', e => {
   e.waitUntil(caches.open(CACHE).then(c => Promise.allSettled(CORE.map(u => c.add(u)))));
   self.skipWaiting();
@@ -12,7 +10,8 @@ self.addEventListener('activate', e => {
 });
 self.addEventListener('fetch', e => {
   if (e.request.method !== 'GET') return;
-  e.respondWith(caches.match(e.request).then(hit => hit || fetch(e.request).then(res => {
+  if (e.request.url.includes('googlesyndication')) return;
+  e.respondWith(fetch(e.request).then(res => {
     const copy = res.clone(); caches.open(CACHE).then(c => c.put(e.request, copy)); return res;
-  })));
+  }).catch(() => caches.match(e.request)));
 });

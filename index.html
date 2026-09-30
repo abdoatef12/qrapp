@@ -30,6 +30,9 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
 #preview{background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-top:6px}
 #preview img,#preview canvas{display:block;max-width:100%;height:auto}
 .actions{display:flex;gap:10px;margin-top:12px}
+.svc h3{margin:0 0 6px;font-size:18px}.svc p{margin:0;color:#94a3b8;font-size:14px;line-height:1.7}
+button.wa{background:#22c55e}button.don{background:#f59e0b;color:#111}
+.filebtn{display:block;padding:12px;border-radius:10px;border:1px dashed #475569;text-align:center;color:#94a3b8;font-size:14px}
 .hint{font-size:12px;color:#64748b;text-align:center;margin-top:14px}
 .err{color:#f87171;font-size:14px;margin-top:8px;display:none}
 </style>
@@ -47,6 +50,11 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
         <div><label>لون الخلفية</label><input type="color" id="bg" value="#ffffff"></div>
       </div>
     </div>
+    <div id="logoBox">
+      <label>شعار في منتصف الكود (اختياري)</label>
+      <label class="filebtn" for="logoFile" id="logoLbl">اضغط لاختيار صورة الشعار</label>
+      <input type="file" id="logoFile" accept="image/*" style="display:none">
+    </div>
     <div class="err" id="err"></div>
     <button class="main" id="gen">إنشاء</button>
   </div>
@@ -59,12 +67,31 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
     </div>
   </div>
 
+  <div class="card svc" id="services" style="display:none">
+    <h3>محتاج QR لمحلك أو شغلك؟</h3>
+    <p>نجهز لك QR بشعارك، أو منيو لمطعمك، أو كود لصفحاتك وواتساب، بتصميم احترافي.</p>
+    <button class="main wa" id="orderBtn">اطلب الآن على واتساب</button>
+  </div>
+
+  <div class="actions" style="margin-top:12px">
+    <button class="sec" id="shareApp">شارك التطبيق</button>
+    <button class="sec don" id="donateBtn" style="display:none">ادعمنا بقهوة ☕</button>
+  </div>
+
+  <div id="adBox" style="margin-top:14px;text-align:center"></div>
+
   <p class="hint">يعمل بدون تسجيل، والبيانات لا تُرسل لأي مكان.</p>
 </main>
 
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
 <script>
+// ===== إعداداتك (عدّلها من هنا) =====
+const WA_NUMBER='';      // رقمك بالصيغة الدولية بدون + ، مثال: 201012345678
+const DONATE_URL='';     // رابط التبرع (Buy Me a Coffee أو غيره)
+const ADSENSE_CLIENT=''; // مثال: ca-pub-1234567890123456
+const ADSENSE_SLOT='';   // رقم وحدة الإعلان
+// =====================================
 const esc = s => s.replace(/([\\;,:"])/g, '\\$1');
 const escV = s => s.replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
 
@@ -89,6 +116,14 @@ const TYPES = {
              if(v.tel)l.push('TEL:'+v.tel); if(v.mail)l.push('EMAIL:'+v.mail);
              if(v.org)l.push('ORG:'+escV(v.org)); if(v.url)l.push('URL:'+v.url);
              l.push('END:VCARD'); return l.join('\n');}},
+  whatsapp:{name:'واتساب', fields:[{id:'n', label:'رقم واتساب بالصيغة الدولية (مثال 201012345678)', inputmode:'tel'},{id:'m', label:'رسالة جاهزة (اختياري)', type:'textarea'}],
+           build:v=>`https://wa.me/${v.n.replace(/\D/g,'')}`+(v.m?`?text=${encodeURIComponent(v.m)}`:'')},
+  map:    {name:'موقع', fields:[{id:'q', label:'اسم المكان أو العنوان'}],
+           build:v=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.q)}`},
+  social: {name:'سوشيال', fields:[
+             {id:'p', label:'المنصة', type:'select', opts:[['instagram.com/','إنستجرام'],['facebook.com/','فيسبوك'],['tiktok.com/@','تيك توك'],['t.me/','تيليجرام'],['youtube.com/@','يوتيوب']]},
+             {id:'u', label:'اسم الحساب (بدون @)'}],
+           build:v=>`https://${v.p}${v.u.replace(/^@/,'')}`},
   barcode:{name:'باركود', barcode:true, fields:[
              {id:'v', label:'الرقم أو النص'},
              {id:'fmt', label:'النوع', type:'select', opts:[['CODE128','Code 128 (نصوص وأرقام)'],['EAN13','EAN-13 (12 أو 13 رقم)'],['EAN8','EAN-8'],['UPC','UPC-A'],['CODE39','Code 39']]}]}
@@ -115,6 +150,7 @@ function renderFields(){
     else h+=`<input id="f_${f.id}" ${f.inputmode?`inputmode="${f.inputmode}"`:''} autocomplete="off">`;
   }
   $('fields').innerHTML=h;
+  $('logoBox').style.display=t.barcode?'none':'block';
 }
 function values(){
   const v={}; for(const f of TYPES[current].fields) v[f.id]=$('f_'+f.id).value.trim(); return v;
@@ -138,7 +174,7 @@ $('gen').onclick=()=>{
   const text=t.build(v);
   const holder=document.createElement('div'); prev.appendChild(holder);
   try{
-    new QRCode(holder,{text, width:512, height:512, colorDark:fg, colorLight:bg, correctLevel:QRCode.CorrectLevel.M});
+    new QRCode(holder,{text, width:512, height:512, colorDark:fg, colorLight:bg, correctLevel:logoImg?QRCode.CorrectLevel.H:QRCode.CorrectLevel.M});
   }catch(e){ return showErr('النص طويل جداً، قلّله وحاول مرة أخرى.'); }
   prev.style.background=bg;
   setTimeout(()=>{
@@ -147,6 +183,14 @@ $('gen').onclick=()=>{
     out.width=out.height=src.width+pad*2;
     const ctx=out.getContext('2d'); ctx.fillStyle=bg; ctx.fillRect(0,0,out.width,out.height);
     ctx.drawImage(src,pad,pad);
+    if(logoImg){
+      const s=Math.round(src.width*0.22), x=(out.width-s)/2, r=12;
+      ctx.fillStyle=bg; ctx.beginPath();
+      ctx.roundRect ? ctx.roundRect(x-8,x-8,s+16,s+16,r) : ctx.rect(x-8,x-8,s+16,s+16);
+      ctx.fill();
+      const k=Math.min(s/logoImg.width, s/logoImg.height), w=logoImg.width*k, hh=logoImg.height*k;
+      ctx.drawImage(logoImg,(out.width-w)/2,(out.height-hh)/2,w,hh);
+    }
     out.style.width='100%'; out.style.maxWidth='320px';
     prev.innerHTML=''; prev.appendChild(out); finalCanvas=out;
     $('out').style.display='block';
@@ -167,6 +211,32 @@ $('share').onclick=async()=>{
   if(navigator.canShare && navigator.canShare({files:[file]})){ try{await navigator.share({files:[file]});}catch(e){} }
   else $('dl').click();
 };
+
+let logoImg=null;
+$('logoFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f){logoImg=null;$('logoLbl').textContent='اضغط لاختيار صورة الشعار';return;}
+  const im=new Image(); im.onload=()=>{logoImg=im;$('logoLbl').textContent='تم اختيار الشعار ✓ (اضغط للتغيير)';};
+  im.src=URL.createObjectURL(f);
+};
+
+// ===== الربح =====
+if(WA_NUMBER){
+  $('services').style.display='block';
+  $('orderBtn').onclick=()=>window.open('https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent('السلام عليكم، عايز أطلب تصميم QR / منيو لمحلي'),'_blank');
+}
+if(DONATE_URL){ $('donateBtn').style.display='block'; $('donateBtn').onclick=()=>window.open(DONATE_URL,'_blank'); }
+$('shareApp').onclick=async()=>{
+  const data={title:'مولّد QR والباركود',text:'جرّب تطبيق مولّد QR والباركود، مجاني وسريع:',url:location.href.split('#')[0]};
+  if(navigator.share){ try{await navigator.share(data);}catch(e){} }
+  else{ try{await navigator.clipboard.writeText(data.url); alert('تم نسخ الرابط');}catch(e){ prompt('انسخ الرابط:',data.url);} }
+};
+if(ADSENSE_CLIENT && ADSENSE_SLOT){
+  const s=document.createElement('script'); s.async=true; s.crossOrigin='anonymous';
+  s.src='https://pagead2.googlesyndication.com/pagead/js/adsbygoogle.js?client='+ADSENSE_CLIENT;
+  document.head.appendChild(s);
+  $('adBox').innerHTML=`<ins class="adsbygoogle" style="display:block" data-ad-client="${ADSENSE_CLIENT}" data-ad-slot="${ADSENSE_SLOT}" data-ad-format="auto" data-full-width-responsive="true"></ins>`;
+  s.onload=()=>{try{(adsbygoogle=window.adsbygoogle||[]).push({});}catch(e){}};
+}
 
 renderTabs(); renderFields();
 if('serviceWorker' in navigator && location.protocol.startsWith('http')) navigator.serviceWorker.register('sw.js');
