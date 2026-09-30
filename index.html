@@ -30,8 +30,6 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
 #preview{background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-top:6px}
 #preview img,#preview canvas{display:block;max-width:100%;height:auto}
 .actions{display:flex;gap:10px;margin-top:12px}
-.svc h3{margin:0 0 6px;font-size:18px}.svc p{margin:0;color:#94a3b8;font-size:14px;line-height:1.7}
-button.wa{background:#22c55e}button.don{background:#f59e0b;color:#111}
 .filebtn{display:block;padding:12px;border-radius:10px;border:1px dashed #475569;text-align:center;color:#94a3b8;font-size:14px}
 .hint{font-size:12px;color:#64748b;text-align:center;margin-top:14px}
 .err{color:#f87171;font-size:14px;margin-top:8px}
@@ -48,7 +46,7 @@ button.wa{background:#22c55e}button.don{background:#f59e0b;color:#111}
     <button id="btnOut" style="width:auto; padding:6px 12px; background:#ef4444; border:0; border-radius:8px; color:#fff; cursor:pointer;">خروج</button>
   </div>
 
-  <!-- شاشة المصادقة (تسجيل الدخول / إنشاء حساب) -->
+  <!-- شاشة المصادقة -->
   <div class="card" id="authPanel">
     <h3 style="margin-top:0">تسجيل الدخول</h3>
     <p style="font-size:13px; color:#94a3b8;">أهلاً بيك، سجل دخولك للمتابعة.</p>
@@ -99,23 +97,22 @@ button.wa{background:#22c55e}button.don{background:#f59e0b;color:#111}
   <p class="hint">يعمل بكل أمان عبر حسابك الشخصي.</p>
 </main>
 
-<!-- مكتبات QR و Barcode -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
 
-<!-- مكتبات Firebase -->
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
 <script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
 
 <script>
+// إعدادات الـ Firebase الحقيقية الخاصة بك
 const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyDummyKeyForAppStructure",
+  apiKey: "AIzaSyBeq7MWoLLwbFwPPOxPnCH58MjttrQ2uS4",
   authDomain: "qrapp-b9c58.firebaseapp.com",
   projectId: "qrapp-b9c58",
   storageBucket: "qrapp-b9c58.firebasestorage.app",
-  messagingSenderId: "123456789",
-  appId: "1:123456:web:abcdef"
+  messagingSenderId: "1096118512324",
+  appId: "1:1096118512324:web:372b94adf275678dd8b791"
 };
 
 if (!firebase.apps.length) {
@@ -265,7 +262,6 @@ $('shareApp').onclick=async()=>{
   else{ try{await navigator.clipboard.writeText(data.url); alert('تم نسخ الرابط');}catch(e){} }
 };
 
-// كود تثبيت التطبيق (PWA)
 if ('serviceWorker' in navigator) {
   navigator.serviceWorker.register('sw.js').catch(()=>{});
 }
