@@ -1,10 +1,289 @@
-</body>
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#0f172a">
+<link rel="manifest" href="manifest.json">
+<link rel="icon" href="icon-192.png">
+<link rel="apple-touch-icon" href="icon-192.png">
+<title>مولّد QR والباركود</title>
+<style>
+*{box-sizing:border-box;-webkit-tap-highlight-color:transparent}
+body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Tahoma,sans-serif;background:#0f172a;color:#e2e8f0;min-height:100vh;padding:env(safe-area-inset-top) 0 env(safe-area-inset-bottom)}
+header{padding:18px 16px 6px;text-align:center}
+header h1{margin:0;font-size:22px}
+main{max-width:480px;margin:0 auto;padding:12px 16px 40px}
+.tabs{display:flex;gap:8px;overflow-x:auto;padding-bottom:8px;scrollbar-width:none}
+.tabs::-webkit-scrollbar{display:none}
+.tab{flex:0 0 auto;padding:9px 14px;border-radius:999px;background:#1e293b;color:#cbd5e1;border:0;font-size:15px}
+.tab.active{background:#3b82f6;color:#fff}
+.card{background:#1e293b;border-radius:16px;padding:16px;margin-top:10px}
+label{display:block;font-size:13px;color:#94a3b8;margin:10px 0 4px}
+input,select,textarea{width:100%;padding:12px;border-radius:10px;border:1px solid #334155;background:#0f172a;color:#e2e8f0;font-size:16px;font-family:inherit}
+textarea{min-height:80px;resize:vertical}
+.row{display:flex;gap:10px}.row>div{flex:1}
+input[type=color]{padding:2px;height:44px}
+button.main{width:100%;margin-top:14px;padding:14px;border:0;border-radius:12px;background:#3b82f6;color:#fff;font-size:17px;font-weight:600;cursor:pointer}
+button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;color:#e2e8f0;font-size:15px;cursor:pointer}
+#out{display:none;text-align:center}
+#preview{background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-top:6px}
+#preview img,#preview canvas{display:block;max-width:100%;height:auto}
+.actions{display:flex;gap:10px;margin-top:12px}
+.svc h3{margin:0 0 6px;font-size:18px}.svc p{margin:0;color:#94a3b8;font-size:14px;line-height:1.7}
+button.wa{background:#22c55e}button.don{background:#f59e0b;color:#111}
+.filebtn{display:block;padding:12px;border-radius:10px;border:1px dashed #475569;text-align:center;color:#94a3b8;font-size:14px}
+.hint{font-size:12px;color:#64748b;text-align:center;margin-top:14px}
+.err{color:#f87171;font-size:14px;margin-top:8px}
+#userBar{display:none;justify-content:space-between;align-items:center;background:#334155;padding:10px 14px;border-radius:12px;margin-bottom:12px;font-size:14px;}
+</style>
+</head>
+<body>
+<header><h1>مولّد QR والباركود</h1></header>
+<main>
+  
+  <!-- شريط معلومات المستخدم وتسجيل الخروج -->
+  <div id="userBar">
+    <span id="userMail"></span>
+    <button id="btnOut" style="width:auto; padding:6px 12px; background:#ef4444; border:0; border-radius:8px; color:#fff; cursor:pointer;">خروج</button>
+  </div>
+
+  <!-- شاشة المصادقة (تسجيل الدخول / إنشاء حساب) -->
+  <div class="card" id="authPanel">
+    <h3 style="margin-top:0">تسجيل الدخول</h3>
+    <p style="font-size:13px; color:#94a3b8;">أهلاً بيك، سجل دخولك للمتابعة.</p>
+    <label>البريد الإلكتروني</label>
+    <input type="email" id="aemail" autocomplete="email">
+    <label>كلمة المرور</label>
+    <input type="password" id="apass" autocomplete="current-password">
+    <button class="main" id="btnLogin">دخول</button>
+    <button class="main" id="btnSignup" style="background:#10b981; margin-top:8px;">إنشاء حساب جديد</button>
+    <div class="err" id="autherr"></div>
+  </div>
+
+  <!-- التطبيق الأصلي -->
+  <div id="appContainer" style="display:none;">
+    <div class="tabs" id="tabs"></div>
+
+    <div class="card">
+      <div id="fields"></div>
+      <div id="styleBox">
+        <div class="row">
+          <div><label>لون الكود</label><input type="color" id="fg" value="#000000"></div>
+          <div><label>لون الخلفية</label><input type="color" id="bg" value="#ffffff"></div>
+        </div>
+      </div>
+      <div id="logoBox">
+        <label>شعار في منتصف الكود (اختياري)</label>
+        <label class="filebtn" for="logoFile" id="logoLbl">اضغط لاختيار صورة الشعار</label>
+        <input type="file" id="logoFile" accept="image/*" style="display:none">
+      </div>
+      <div class="err" id="err" style="display:none"></div>
+      <button class="main" id="gen">إنشاء</button>
+    </div>
+
+    <div class="card" id="out">
+      <div id="preview"></div>
+      <div class="actions">
+        <button class="sec" id="dl">حفظ الصورة</button>
+        <button class="sec" id="share">مشاركة</button>
+      </div>
+    </div>
+  </div>
+
+  <div class="actions" style="margin-top:12px">
+    <button class="sec" id="installBtn" style="display:none; background:#3b82f6; color:#fff;">تثبيت التطبيق</button>
+    <button class="sec" id="shareApp">شارك التطبيق</button>
+  </div>
+
+  <p class="hint">يعمل بكل أمان عبر حسابك الشخصي.</p>
+</main>
+
+<!-- مكتبات QR و Barcode -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
+
+<!-- مكتبات Firebase -->
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
+
 <script>
-if ("serviceWorker" in navigator) {
-  window.addEventListener("load", () => {
-    navigator.serviceWorker.register("./sw.js")
-      .then(() => console.log("Service Worker يعمل"))
-      .catch(err => console.log("Service Worker Error:", err));
-  });
+const FIREBASE_CONFIG = {
+  apiKey: "AIzaSyDummyKeyForAppStructure",
+  authDomain: "qrapp-b9c58.firebaseapp.com",
+  projectId: "qrapp-b9c58",
+  storageBucket: "qrapp-b9c58.firebasestorage.app",
+  messagingSenderId: "123456789",
+  appId: "1:123456:web:abcdef"
+};
+
+if (!firebase.apps.length) {
+  firebase.initializeApp(FIREBASE_CONFIG);
 }
+const auth = firebase.auth();
+const db = firebase.firestore();
+
+const esc = s => s.replace(/([\\;,:"])/g, '\\$1');
+const escV = s => s.replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
+
+const TYPES = {
+  text:   {name:'نص / رابط', fields:[{id:'v', label:'النص أو الرابط', type:'textarea'}], build:v=>v.v},
+  wifi:   {name:'واي فاي', fields:[{id:'ssid', label:'اسم الشبكة'},{id:'pass', label:'كلمة السر'},{id:'auth', label:'نوع الحماية', type:'select', opts:[['WPA','WPA/WPA2'],['WEP','WEP'],['nopass','بدون كلمة سر']]}], build:v=>`WIFI:T:${v.auth};S:${esc(v.ssid)};P:${esc(v.pass)};;`},
+  phone:  {name:'هاتف', fields:[{id:'n', label:'رقم الهاتف', inputmode:'tel'}], build:v=>`tel:${v.n}`},
+  sms:    {name:'رسالة', fields:[{id:'n', label:'الرقم', inputmode:'tel'},{id:'m', label:'نص الرسالة', type:'textarea'}], build:v=>`SMSTO:${v.n}:${v.m}`},
+  email:  {name:'بريد', fields:[{id:'a', label:'البريد الإلكتروني', inputmode:'email'},{id:'s', label:'الموضوع'},{id:'b', label:'النص', type:'textarea'}], build:v=>`mailto:${v.a}?subject=${encodeURIComponent(v.s)}&body=${encodeURIComponent(v.b)}`},
+  whatsapp:{name:'واتساب', fields:[{id:'n', label:'رقم واتساب بالصيغة الدولية', inputmode:'tel'},{id:'m', label:'رسالة جاهزة (اختياري)', type:'textarea'}], build:v=>`https://wa.me/${v.n.replace(/\D/g,'')}`+(v.m?`?text=${encodeURIComponent(v.m)}`:'')},
+  barcode:{name:'باركود', barcode:true, fields:[{id:'v', label:'الرقم أو النص'},{id:'fmt', label:'النوع', type:'select', opts:[['CODE128','Code 128'],['EAN13','EAN-13'],['UPC','UPC-A']]}]}
+};
+
+let current='text';
+const $=id=>document.getElementById(id);
+
+auth.onAuthStateChanged(async user => {
+  if (user) {
+    $('authPanel').style.display = 'none';$('appContainer').style.display = 'block';
+    $('userBar').style.display = 'flex';$('userMail').textContent = user.email;
+    renderTabs(); 
+    renderFields();
+  } else {
+    $('authPanel').style.display = 'block';
+    $('appContainer').style.display = 'none';$('userBar').style.display = 'none';
+  }
+});
+
+const AUTH_MSG = {
+  'auth/invalid-email': 'البريد الإلكتروني غير صحيح.',
+  'auth/missing-password': 'اكتب كلمة السر.',
+  'auth/wrong-password': 'كلمة السر غير صحيحة.',
+  'auth/invalid-credential': 'البريد أو كلمة السر غير صحيحة.',
+  'auth/user-not-found': 'لا يوجد حساب بهذا البريد.',
+  'auth/email-already-in-use': 'هذا البريد مسجّل بالفعل.'
+};
+const showAuthErr = m => $('autherr').textContent = m;
+
+$('btnLogin').onclick = async () => {
+  showAuthErr('');
+  try { await auth.signInWithEmailAndPassword($('aemail').value.trim(),$('apass').value); } 
+  catch(e) { showAuthErr(AUTH_MSG[e.code] || e.message); }
+};
+
+$('btnSignup').onclick = async () => {
+  showAuthErr('');
+  try { await auth.createUserWithEmailAndPassword($('aemail').value.trim(),$('apass').value); } 
+  catch(e) { showAuthErr(AUTH_MSG[e.code] || e.message); }
+};
+
+$('btnOut').onclick = () => auth.signOut();
+
+function renderTabs(){
+  $('tabs').innerHTML='';
+  for(const k in TYPES){
+    const b=document.createElement('button');
+    b.className='tab'+(k===current?' active':''); b.textContent=TYPES[k].name;
+    b.onclick=()=>{current=k;renderTabs();renderFields();$('out').style.display='none';$('err').style.display='none';};$('tabs').appendChild(b);
+  }
+}
+
+function renderFields(){
+  const t=TYPES[current]; let h='';
+  for(const f of t.fields){
+    h+=`<label for="f_${f.id}">${f.label}</label>`;
+    if(f.type==='textarea') h+=`<textarea id="f_${f.id}"></textarea>`;
+    else if(f.type==='select') h+=`<select id="f_${f.id}">${f.opts.map(o=>`<option value="${o[0]}">${o[1]}</option>`).join('')}</select>`;
+    else h+=`<input id="f_${f.id}" ${f.inputmode?`inputmode="${f.inputmode}"`:''} autocomplete="off">`;
+  }
+  $('fields').innerHTML=h;
+  $('logoBox').style.display=t.barcode?'none':'block';
+}
+
+function values(){
+  const v={}; for(const f of TYPES[current].fields) v[f.id]=$('f_'+f.id).value.trim(); return v;
+}
+
+function showErr(m){$('err').textContent=m;$('err').style.display='block';$('out').style.display='none';}
+
+let finalCanvas=null;
+$('gen').onclick=()=>{$('err').style.display='none';
+  const t=TYPES[current], v=values(), fg=$('fg').value, bg=$('bg').value;
+  if(!v[t.fields[0].id]) return showErr('من فضلك أدخل البيانات أولاً.');
+  const prev=$('preview'); prev.innerHTML='';
+  if(t.barcode){
+    const c=document.createElement('canvas');
+    try{ JsBarcode(c, v.v, {format:v.fmt, lineColor:fg, background:bg, margin:16, width:3, height:110, displayValue:true}); }
+    catch(e){ return showErr('القيمة غير مناسبة لهذا النوع من الباركود.'); }
+    prev.style.background=bg; prev.appendChild(c); finalCanvas=c;
+    $('out').style.display='block'; return;
+  }
+  const text=t.build(v);
+  const holder=document.createElement('div'); prev.appendChild(holder);
+  try{ new QRCode(holder,{text, width:512, height:512, colorDark:fg, colorLight:bg, correctLevel:logoImg?QRCode.CorrectLevel.H:QRCode.CorrectLevel.M}); }
+  catch(e){ return showErr('النص طويل جداً.'); }
+  prev.style.background=bg;
+  setTimeout(()=>{
+    const src=holder.querySelector('canvas'); if(!src) return;
+    const pad=48, out=document.createElement('canvas');
+    out.width=out.height=src.width+pad*2;
+    const ctx=out.getContext('2d'); ctx.fillStyle=bg; ctx.fillRect(0,0,out.width,out.height);
+    ctx.drawImage(src,pad,pad);
+    if(logoImg){
+      const s=Math.round(src.width*0.22), x=(out.width-s)/2;
+      ctx.fillStyle=bg; ctx.fillRect(x-8,x-8,s+16,s+16);
+      const k=Math.min(s/logoImg.width, s/logoImg.height), w=logoImg.width*k, hh=logoImg.height*k;
+      ctx.drawImage(logoImg,(out.width-w)/2,(out.height-hh)/2,w,hh);
+    }
+    out.style.width='100%'; out.style.maxWidth='320px';
+    prev.innerHTML=''; prev.appendChild(out); finalCanvas=out;
+    $('out').style.display='block';
+  },50);
+};
+
+function blobOf(){return new Promise(r=>finalCanvas.toBlob(r,'image/png'));}
+$('dl').onclick=async()=>{
+  if(!finalCanvas) return;
+  const b=await blobOf(), a=document.createElement('a');
+  a.href=URL.createObjectURL(b); a.download='code.png';
+  document.body.appendChild(a); a.click(); a.remove();
+};
+$('share').onclick=async()=>{
+  if(!finalCanvas) return;
+  const b=await blobOf(), file=new File([b],'qr.png',{type:'image/png'});
+  if(navigator.canShare && navigator.canShare({files:[file]})){ try{await navigator.share({files:[file]});}catch(e){} }
+  else $('dl').click();
+};
+
+let logoImg=null;
+$('logoFile').onchange=e=>{
+  const f=e.target.files[0]; if(!f){logoImg=null;$('logoLbl').textContent='اضغط لاختيار صورة الشعار';return;}
+  const im=new Image(); im.onload=()=>{logoImg=im;$('logoLbl').textContent='تم اختيار الشعار ✓';};
+  im.src=URL.createObjectURL(f);
+};
+
+$('shareApp').onclick=async()=>{
+  const data={title:'مولّد QR والباركود',url:location.href.split('#')[0]};
+  if(navigator.share){ try{await navigator.share(data);}catch(e){} }
+  else{ try{await navigator.clipboard.writeText(data.url); alert('تم نسخ الرابط');}catch(e){} }
+};
+
+// كود تثبيت التطبيق (PWA)
+if ('serviceWorker' in navigator) {
+  navigator.serviceWorker.register('sw.js').catch(()=>{});
+}
+let deferredPrompt;
+window.addEventListener('beforeinstallprompt', (e) => {
+  e.preventDefault();
+  deferredPrompt = e;
+  $('installBtn').style.display = 'block';
+});
+$('installBtn').onclick = async () => {
+  if (deferredPrompt) {
+    deferredPrompt.prompt();
+    const { outcome } = await deferredPrompt.userChoice;
+    if (outcome === 'accepted') { $('installBtn').style.display = 'none'; }
+    deferredPrompt = null;
+  }
+};
 </script>
+</body>
+</html>
+
