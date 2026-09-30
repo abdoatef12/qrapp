@@ -30,8 +30,17 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
 #preview{background:#fff;border-radius:12px;padding:14px;display:inline-block;margin-top:6px}
 #preview img,#preview canvas{display:block;max-width:100%;height:auto}
 .actions{display:flex;gap:10px;margin-top:12px}
+.svc h3{margin:0 0 6px;font-size:18px}.svc p{margin:0;color:#94a3b8;font-size:14px;line-height:1.7}
+button.wa{background:#22c55e}button.don{background:#f59e0b;color:#111}
 .filebtn{display:block;padding:12px;border-radius:10px;border:1px dashed #475569;text-align:center;color:#94a3b8;font-size:14px}
 .hint{font-size:12px;color:#64748b;text-align:center;margin-top:14px}
+.locked input,.locked select,.locked label.filebtn{pointer-events:none;opacity:.45}
+.svc ul{margin:8px 0;padding-inline-start:18px;color:#cbd5e1;font-size:14px;line-height:2}
+.lockNote{font-size:12px;color:#f59e0b;margin-top:6px}
+.pkg{border-top:1px solid #334155;padding:12px 0}.pkg:first-of-type{border-top:0}
+.pkg b{font-size:15px}.pkg .pr{color:#22c55e;font-weight:700}
+.pkg button{margin-top:8px;padding:10px;font-size:14px}
+.aff a{display:block;padding:10px;background:#334155;border-radius:10px;color:#e2e8f0;text-decoration:none;margin-top:8px;font-size:14px}
 .err{color:#f87171;font-size:14px;margin-top:8px}
 #userBar{display:none;justify-content:space-between;align-items:center;background:#334155;padding:10px 14px;border-radius:12px;margin-bottom:12px;font-size:14px;}
 </style>
@@ -39,28 +48,8 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
 <body>
 <header><h1>مولّد QR والباركود</h1></header>
 <main>
-  
-  <!-- شريط معلومات المستخدم وتسجيل الخروج -->
-  <div id="userBar">
-    <span id="userMail"></span>
-    <button id="btnOut" style="width:auto; padding:6px 12px; background:#ef4444; border:0; border-radius:8px; color:#fff; cursor:pointer;">خروج</button>
-  </div>
-
-  <!-- شاشة المصادقة -->
-  <div class="card" id="authPanel">
-    <h3 style="margin-top:0">تسجيل الدخول</h3>
-    <p style="font-size:13px; color:#94a3b8;">أهلاً بيك، سجل دخولك للمتابعة.</p>
-    <label>البريد الإلكتروني</label>
-    <input type="email" id="aemail" autocomplete="email">
-    <label>كلمة المرور</label>
-    <input type="password" id="apass" autocomplete="current-password">
-    <button class="main" id="btnLogin">دخول</button>
-    <button class="main" id="btnSignup" style="background:#10b981; margin-top:8px;">إنشاء حساب جديد</button>
-    <div class="err" id="autherr"></div>
-  </div>
-
-  <!-- التطبيق الأصلي -->
-  <div id="appContainer" style="display:none;">
+  <!-- التطبيق (مخفي لحين تسجيل الدخول) -->
+  <div id="appContainer">
     <div class="tabs" id="tabs"></div>
 
     <div class="card">
@@ -70,6 +59,14 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
           <div><label>لون الكود</label><input type="color" id="fg" value="#000000"></div>
           <div><label>لون الخلفية</label><input type="color" id="bg" value="#ffffff"></div>
         </div>
+        <div id="extraStyle">
+          <div class="row">
+            <div><label>لون تدرج (اختياري)</label><input type="color" id="fg2" value="#000000"></div>
+            <div><label>شكل النقاط</label><select id="shape"><option value="square">مربعات</option><option value="round">دائرية الحواف</option><option value="dots">نقاط</option></select></div>
+          </div>
+          <label>نص تحت الكود (مثال: امسح للمنيو)</label>
+          <input id="frameTxt" autocomplete="off">
+        </div>
       </div>
       <div id="logoBox">
         <label>شعار في منتصف الكود (اختياري)</label>
@@ -78,6 +75,7 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
       </div>
       <div class="err" id="err" style="display:none"></div>
       <button class="main" id="gen">إنشاء</button>
+      <div class="hint" id="quota"></div>
     </div>
 
     <div class="card" id="out">
@@ -85,41 +83,51 @@ button.sec{flex:1;padding:12px;border:0;border-radius:12px;background:#334155;co
       <div class="actions">
         <button class="sec" id="dl">حفظ الصورة</button>
         <button class="sec" id="share">مشاركة</button>
+        <button class="sec" id="svgBtn" style="display:none">SVG 🔒</button>
       </div>
+    </div>
+    <div class="card svc" id="premBadge" style="display:none;color:#22c55e;font-weight:700;text-align:center"></div>
+    <div class="card svc" id="upgrade" style="display:none">
+      <h3>⭐ النسخة المميزة</h3>
+      <ul>
+        <li>🖼️ جودة HD للطباعة (1024px) بدل 512</li>
+        <li>📐 ملف SVG يتكبّر بدون ما يتشوه</li>
+        <li>🎨 ألوان متدرجة وخلفية مخصصة</li>
+        <li>🔵 أشكال نقاط عصرية بدل المربعات</li>
+        <li>🏷️ شعار محلك في منتصف الكود</li>
+        <li>🪧 شريط نص تحت الكود (امسح للمنيو)</li>
+        <li>🍽️ طاولات: حتى 100 كود دفعة واحدة في ZIP</li>
+        <li>♾️ بدون حد يومي وبدون علامة مائية</li>
+      </ul>
+      <button class="main don" id="upBtn"></button>
+      <p id="payInfo" style="margin-top:10px"></p>
+      <label>عندك كود تفعيل؟</label>
+      <input id="actCode" placeholder="XXXX-XXXX-XXXX" autocomplete="off" style="direction:ltr;text-align:center">
+      <button class="main" id="actBtn" style="background:#334155">تفعيل الكود</button>
+      <div class="err" id="actMsg"></div>
     </div>
   </div>
 
   <div class="actions" style="margin-top:12px">
-    <button class="sec" id="installBtn" style="display:none; background:#3b82f6; color:#fff;">تثبيت التطبيق</button>
     <button class="sec" id="shareApp">شارك التطبيق</button>
   </div>
 
-  <p class="hint">يعمل بكل أمان عبر حسابك الشخصي.</p>
+  <p class="hint">مجاني وسريع ويعمل بدون إنترنت بعد أول تحميل.</p>
 </main>
 
+<!-- مكتبات QR و Barcode الأصلية -->
 <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jszip/3.10.1/jszip.min.js"></script>
 <script src="https://cdnjs.cloudflare.com/ajax/libs/jsbarcode/3.11.6/JsBarcode.all.min.js"></script>
 
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore-compat.js"></script>
-
 <script>
-// إعدادات الـ Firebase الحقيقية الخاصة بك
-const FIREBASE_CONFIG = {
-  apiKey: "AIzaSyBeq7MWoLLwbFwPPOxPnCH58MjttrQ2uS4",
-  authDomain: "qrapp-b9c58.firebaseapp.com",
-  projectId: "qrapp-b9c58",
-  storageBucket: "qrapp-b9c58.firebasestorage.app",
-  messagingSenderId: "1096118512324",
-  appId: "1:1096118512324:web:372b94adf275678dd8b791"
-};
-
-if (!firebase.apps.length) {
-  firebase.initializeApp(FIREBASE_CONFIG);
-}
-const auth = firebase.auth();
-const db = firebase.firestore();
+// ===== إعدادات الربح (عدّل هنا فقط) =====
+const WA_NUMBER='201070621325';        // رقمك بالصيغة الدولية بدون + مثال: 201012345678
+const PAY_NUMBER='01070621325'; // رقم فودافون كاش للدفع
+const FREE_DAILY_LIMIT=5;  // عدد الأكواد المجانية يومياً
+const PREMIUM_PRICE='50 جنيه / شهر';
+const WATERMARK='صُنع بمولّد QR';
+let isPremium=false, curUser=null;
 
 const esc = s => s.replace(/([\\;,:"])/g, '\\$1');
 const escV = s => s.replace(/\\/g,'\\\\').replace(/;/g,'\\;').replace(/,/g,'\\,').replace(/\n/g,'\\n');
@@ -130,49 +138,18 @@ const TYPES = {
   phone:  {name:'هاتف', fields:[{id:'n', label:'رقم الهاتف', inputmode:'tel'}], build:v=>`tel:${v.n}`},
   sms:    {name:'رسالة', fields:[{id:'n', label:'الرقم', inputmode:'tel'},{id:'m', label:'نص الرسالة', type:'textarea'}], build:v=>`SMSTO:${v.n}:${v.m}`},
   email:  {name:'بريد', fields:[{id:'a', label:'البريد الإلكتروني', inputmode:'email'},{id:'s', label:'الموضوع'},{id:'b', label:'النص', type:'textarea'}], build:v=>`mailto:${v.a}?subject=${encodeURIComponent(v.s)}&body=${encodeURIComponent(v.b)}`},
+  vcard:  {name:'جهة اتصال', fields:[{id:'name', label:'الاسم'},{id:'tel', label:'الهاتف', inputmode:'tel'},{id:'mail', label:'البريد', inputmode:'email'},{id:'org', label:'الشركة'},{id:'url', label:'الموقع'}], build:v=>{const l=['BEGIN:VCARD','VERSION:3.0','FN:'+escV(v.name)];if(v.tel)l.push('TEL:'+v.tel);if(v.mail)l.push('EMAIL:'+v.mail);if(v.org)l.push('ORG:'+escV(v.org));if(v.url)l.push('URL:'+v.url);l.push('END:VCARD');return l.join('\n');}},
   whatsapp:{name:'واتساب', fields:[{id:'n', label:'رقم واتساب بالصيغة الدولية', inputmode:'tel'},{id:'m', label:'رسالة جاهزة (اختياري)', type:'textarea'}], build:v=>`https://wa.me/${v.n.replace(/\D/g,'')}`+(v.m?`?text=${encodeURIComponent(v.m)}`:'')},
-  barcode:{name:'باركود', barcode:true, fields:[{id:'v', label:'الرقم أو النص'},{id:'fmt', label:'النوع', type:'select', opts:[['CODE128','Code 128'],['EAN13','EAN-13'],['UPC','UPC-A']]}]}
+  map:    {name:'موقع', fields:[{id:'q', label:'اسم المكان أو العنوان'}], build:v=>`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(v.q)}`},
+  social: {name:'سوشيال', fields:[{id:'p', label:'المنصة', type:'select', opts:[['instagram.com/','إنستجرام'],['facebook.com/','فيسبوك'],['tiktok.com/@','تيك توك'],['t.me/','تيليجرام'],['youtube.com/@','يوتيوب']]},{id:'u', label:'اسم الحساب (بدون @)'}], build:v=>`https://${v.p}${v.u.replace(/^@/,'')}`},
+  bulk:{name:'⭐ طاولات ZIP', bulk:true, fields:[{id:'u', label:'رابط المنيو أو الصفحة'},{id:'from', label:'من رقم طاولة', inputmode:'numeric'},{id:'to', label:'إلى رقم طاولة', inputmode:'numeric'},{id:'pre', label:'الاسم تحت كل كود (مثال: طاولة)'}]},
+  barcode:{name:'باركود', barcode:true, fields:[{id:'v', label:'الرقم أو النص'},{id:'fmt', label:'النوع', type:'select', opts:[['CODE128','Code 128'],['EAN13','EAN-13'],['EAN8','EAN-8'],['UPC','UPC-A'],['CODE39','Code 39']]}]}
 };
 
 let current='text';
 const $=id=>document.getElementById(id);
 
-auth.onAuthStateChanged(async user => {
-  if (user) {
-    $('authPanel').style.display = 'none';$('appContainer').style.display = 'block';
-    $('userBar').style.display = 'flex';$('userMail').textContent = user.email;
-    renderTabs(); 
-    renderFields();
-  } else {
-    $('authPanel').style.display = 'block';
-    $('appContainer').style.display = 'none';$('userBar').style.display = 'none';
-  }
-});
-
-const AUTH_MSG = {
-  'auth/invalid-email': 'البريد الإلكتروني غير صحيح.',
-  'auth/missing-password': 'اكتب كلمة السر.',
-  'auth/wrong-password': 'كلمة السر غير صحيحة.',
-  'auth/invalid-credential': 'البريد أو كلمة السر غير صحيحة.',
-  'auth/user-not-found': 'لا يوجد حساب بهذا البريد.',
-  'auth/email-already-in-use': 'هذا البريد مسجّل بالفعل.'
-};
-const showAuthErr = m => $('autherr').textContent = m;
-
-$('btnLogin').onclick = async () => {
-  showAuthErr('');
-  try { await auth.signInWithEmailAndPassword($('aemail').value.trim(),$('apass').value); } 
-  catch(e) { showAuthErr(AUTH_MSG[e.code] || e.message); }
-};
-
-$('btnSignup').onclick = async () => {
-  showAuthErr('');
-  try { await auth.createUserWithEmailAndPassword($('aemail').value.trim(),$('apass').value); } 
-  catch(e) { showAuthErr(AUTH_MSG[e.code] || e.message); }
-};
-
-$('btnOut').onclick = () => auth.signOut();
-
+// منطق التطبيق الأصلي
 function renderTabs(){
   $('tabs').innerHTML='';
   for(const k in TYPES){
@@ -181,7 +158,6 @@ function renderTabs(){
     b.onclick=()=>{current=k;renderTabs();renderFields();$('out').style.display='none';$('err').style.display='none';};$('tabs').appendChild(b);
   }
 }
-
 function renderFields(){
   const t=TYPES[current]; let h='';
   for(const f of t.fields){
@@ -192,55 +168,159 @@ function renderFields(){
   }
   $('fields').innerHTML=h;
   $('logoBox').style.display=t.barcode?'none':'block';
+  $('extraStyle').style.display=t.barcode?'none':'block';
 }
-
 function values(){
   const v={}; for(const f of TYPES[current].fields) v[f.id]=$('f_'+f.id).value.trim(); return v;
 }
-
 function showErr(m){$('err').textContent=m;$('err').style.display='block';$('out').style.display='none';}
 
-let finalCanvas=null;
-$('gen').onclick=()=>{$('err').style.display='none';
-  const t=TYPES[current], v=values(), fg=$('fg').value, bg=$('bg').value;
+let finalCanvas=null, lastSvg='', zipBlob=null;
+const isFinder=(r,c,n)=>(r<7&&c<7)||(r<7&&c>=n-7)||(r>=n-7&&c<7);
+const escXml=t=>String(t).replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+function rr(x,a,b,w,h,r){x.beginPath();x.moveTo(a+r,b);x.arcTo(a+w,b,a+w,b+h,r);x.arcTo(a+w,b+h,a,b+h,r);x.arcTo(a,b+h,a,b,r);x.arcTo(a,b,a+w,b,r);x.closePath();x.fill();}
+function getOpts(){
+  return {
+    fg:isPremium?$('fg').value:'#000000',
+    bg:isPremium?$('bg').value:'#ffffff',
+    fg2:isPremium?$('fg2').value:null,
+    shape:isPremium?$('shape').value:'square',
+    frame:isPremium?$('frameTxt').value.trim():'',
+    logo:isPremium?logoImg:null,
+    size:isPremium?1024:512
+  };
+}
+function levelFor(o){return (o.logo||o.shape!=='square')?QRCode.CorrectLevel.H:QRCode.CorrectLevel.M;}
+function makeMatrix(text,level){
+  const d=document.createElement('div');
+  const q=new QRCode(d,{text,width:128,height:128,correctLevel:level});
+  return q._oQRCode;
+}
+function hasGrad(o){return o.fg2&&o.fg2.toLowerCase()!==o.fg.toLowerCase();}
+function drawQR(m,o,label){
+  const n=m.getModuleCount(), cell=Math.max(2,Math.floor(o.size/n)), qs=cell*n, pad=cell*4;
+  const capH=label?Math.round(qs*0.15):0, wm=isPremium?0:36;
+  const W=qs+pad*2, H=W+capH+wm;
+  const c=document.createElement('canvas'); c.width=W; c.height=H;
+  const x=c.getContext('2d');
+  x.fillStyle=o.bg; x.fillRect(0,0,W,H);
+  let fill=o.fg;
+  if(hasGrad(o)){const g=x.createLinearGradient(pad,pad,pad+qs,pad+qs);g.addColorStop(0,o.fg);g.addColorStop(1,o.fg2);fill=g;}
+  x.fillStyle=fill;
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++){
+    if(!m.isDark(r,k)) continue;
+    const px=pad+k*cell, py=pad+r*cell;
+    if(o.shape==='square') x.fillRect(px,py,cell,cell);
+    else if(isFinder(r,k,n)) rr(x,px,py,cell,cell,cell*0.2);
+    else if(o.shape==='round') rr(x,px,py,cell,cell,cell*0.4);
+    else {x.beginPath();x.arc(px+cell/2,py+cell/2,cell*0.46,0,Math.PI*2);x.fill();}
+  }
+  if(o.logo){
+    const s=Math.round(qs*0.22), cx=W/2, cy=pad+qs/2;
+    x.fillStyle=o.bg; rr(x,cx-s/2-8,cy-s/2-8,s+16,s+16,12);
+    const k=Math.min(s/o.logo.width,s/o.logo.height), w=o.logo.width*k, h=o.logo.height*k;
+    x.drawImage(o.logo,cx-w/2,cy-h/2,w,h);
+  }
+  if(label){
+    x.fillStyle=o.fg; x.fillRect(0,W,W,capH);
+    x.fillStyle=o.bg; x.font='bold '+Math.round(capH*0.5)+'px system-ui,Tahoma,sans-serif';
+    x.textAlign='center'; x.textBaseline='middle'; x.fillText(label,W/2,W+capH/2,W-pad);
+  }
+  if(!isPremium){ x.fillStyle='#666'; x.font='20px sans-serif'; x.textAlign='center'; x.textBaseline='alphabetic'; x.fillText(WATERMARK,W/2,H-10); }
+  return c;
+}
+function buildSvg(m,o,label){
+  const n=m.getModuleCount(), cell=10, qs=cell*n, pad=40, capH=label?Math.round(qs*0.15):0, W=qs+pad*2, H=W+capH;
+  const grad=hasGrad(o), fill=grad?'url(#g)':o.fg;
+  let d='', body='';
+  for(let r=0;r<n;r++)for(let k=0;k<n;k++){
+    if(!m.isDark(r,k)) continue;
+    const px=pad+k*cell, py=pad+r*cell;
+    if(o.shape==='square') d+='M'+px+' '+py+'h'+cell+'v'+cell+'h-'+cell+'z';
+    else if(isFinder(r,k,n)||o.shape==='round') body+='<rect x="'+px+'" y="'+py+'" width="'+cell+'" height="'+cell+'" rx="'+(isFinder(r,k,n)?2:4)+'"/>';
+    else body+='<circle cx="'+(px+5)+'" cy="'+(py+5)+'" r="4.6"/>';
+  }
+  let svg='<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 '+W+' '+H+'" width="'+W+'" height="'+H+'">';
+  if(grad) svg+='<defs><linearGradient id="g" gradientUnits="userSpaceOnUse" x1="'+pad+'" y1="'+pad+'" x2="'+(pad+qs)+'" y2="'+(pad+qs)+'"><stop offset="0" stop-color="'+o.fg+'"/><stop offset="1" stop-color="'+o.fg2+'"/></linearGradient></defs>';
+  svg+='<rect width="'+W+'" height="'+H+'" fill="'+o.bg+'"/><g fill="'+fill+'">'+(d?'<path d="'+d+'"/>':'')+body+'</g>';
+  if(o.logo){
+    const cv=document.createElement('canvas'); cv.width=o.logo.width; cv.height=o.logo.height; cv.getContext('2d').drawImage(o.logo,0,0);
+    const s=qs*0.22, cx=W/2, cy=pad+qs/2, m2=s*0.08;
+    svg+='<rect x="'+(cx-s/2-m2)+'" y="'+(cy-s/2-m2)+'" width="'+(s+2*m2)+'" height="'+(s+2*m2)+'" rx="6" fill="'+o.bg+'"/><image href="'+cv.toDataURL('image/png')+'" x="'+(cx-s/2)+'" y="'+(cy-s/2)+'" width="'+s+'" height="'+s+'" preserveAspectRatio="xMidYMid meet"/>';
+  }
+  if(label) svg+='<rect y="'+W+'" width="'+W+'" height="'+capH+'" fill="'+o.fg+'"/><text x="'+(W/2)+'" y="'+(W+capH/2)+'" fill="'+o.bg+'" font-family="Tahoma,Arial,sans-serif" font-size="'+Math.round(capH*0.5)+'" font-weight="bold" text-anchor="middle" dominant-baseline="middle">'+escXml(label)+'</text>';
+  return svg+'</svg>';
+}
+function showCanvas(c,bg,opt){
+  opt=opt||{};
+  if(opt.fit){c.style.width='100%';c.style.maxWidth='320px';}
+  const prev=$('preview'); prev.innerHTML=''; prev.style.background=bg; prev.appendChild(c);
+  finalCanvas=c;
+  $('svgBtn').style.display=opt.svg?'block':'none';
+  $('svgBtn').textContent=isPremium?'SVG للطباعة':'SVG 🔒';
+  $('share').style.display=zipBlob?'none':'block';
+  $('dl').textContent=zipBlob?'حفظ الكل ZIP':'حفظ الصورة';
+  $('out').style.display='block'; $('out').scrollIntoView({behavior:'smooth'});
+}
+function downloadBlob(b,name){const a=document.createElement('a');a.href=URL.createObjectURL(b);a.download=name;document.body.appendChild(a);a.click();a.remove();}
+
+$('gen').onclick=async()=>{
+  $('err').style.display='none';
+  const t=TYPES[current], v=values(), o=getOpts();
   if(!v[t.fields[0].id]) return showErr('من فضلك أدخل البيانات أولاً.');
-  const prev=$('preview'); prev.innerHTML='';
+  if(t.bulk&&!isPremium){ showErr('ميزة الطاولات (ZIP) للنسخة المميزة.'); showUpgrade(); return; }
+  if(!isPremium){
+    const u=usage();
+    if(u.n>=FREE_DAILY_LIMIT){ showErr('خلص حدّك المجاني اليوم. اشترك في المميزة لأكواد بلا حدود.'); showUpgrade(); return; }
+    localStorage.setItem(u.k,u.n+1); applyPlan();
+  }
+  zipBlob=null; lastSvg='';
+
   if(t.barcode){
     const c=document.createElement('canvas');
-    try{ JsBarcode(c, v.v, {format:v.fmt, lineColor:fg, background:bg, margin:16, width:3, height:110, displayValue:true}); }
+    try{ JsBarcode(c, v.v, {format:v.fmt, lineColor:o.fg, background:o.bg, margin:16, width:3, height:110, displayValue:true}); }
     catch(e){ return showErr('القيمة غير مناسبة لهذا النوع من الباركود.'); }
-    prev.style.background=bg; prev.appendChild(c); finalCanvas=c;
-    $('out').style.display='block'; return;
+    showCanvas(c,o.bg,{svg:false}); return;
   }
-  const text=t.build(v);
-  const holder=document.createElement('div'); prev.appendChild(holder);
-  try{ new QRCode(holder,{text, width:512, height:512, colorDark:fg, colorLight:bg, correctLevel:logoImg?QRCode.CorrectLevel.H:QRCode.CorrectLevel.M}); }
-  catch(e){ return showErr('النص طويل جداً.'); }
-  prev.style.background=bg;
-  setTimeout(()=>{
-    const src=holder.querySelector('canvas'); if(!src) return;
-    const pad=48, out=document.createElement('canvas');
-    out.width=out.height=src.width+pad*2;
-    const ctx=out.getContext('2d'); ctx.fillStyle=bg; ctx.fillRect(0,0,out.width,out.height);
-    ctx.drawImage(src,pad,pad);
-    if(logoImg){
-      const s=Math.round(src.width*0.22), x=(out.width-s)/2;
-      ctx.fillStyle=bg; ctx.fillRect(x-8,x-8,s+16,s+16);
-      const k=Math.min(s/logoImg.width, s/logoImg.height), w=logoImg.width*k, hh=logoImg.height*k;
-      ctx.drawImage(logoImg,(out.width-w)/2,(out.height-hh)/2,w,hh);
-    }
-    out.style.width='100%'; out.style.maxWidth='320px';
-    prev.innerHTML=''; prev.appendChild(out); finalCanvas=out;
-    $('out').style.display='block';
-  },50);
+
+  if(t.bulk){
+    const a=parseInt(v.from,10), b=parseInt(v.to,10);
+    if(!(a>=0&&b>=a&&b-a<100)) return showErr('الأرقام غير صحيحة (بحد أقصى 100 كود).');
+    if(typeof JSZip==='undefined') return showErr('تعذر تحميل مكتبة ZIP، تأكد من الإنترنت.');
+    $('gen').disabled=true; $('gen').textContent='جاري الإنشاء...';
+    try{
+      const zip=new JSZip(); let firstCv=null;
+      for(let i=a;i<=b;i++){
+        const url=v.u+(v.u.includes('?')?'&':'?')+'table='+i;
+        const cv=drawQR(makeMatrix(url,levelFor(o)),o,(v.pre?v.pre+' ':'')+i);
+        if(!firstCv) firstCv=cv;
+        zip.file('table-'+i+'.png',await new Promise(r=>cv.toBlob(r,'image/png')));
+        await new Promise(r=>setTimeout(r,0));
+      }
+      zipBlob=await zip.generateAsync({type:'blob'});
+      showCanvas(firstCv,o.bg,{svg:false,fit:true});
+    }catch(e){ zipBlob=null; showErr('حصل خطأ أثناء الإنشاء، حاول مرة أخرى.'); }
+    $('gen').disabled=false; $('gen').textContent='إنشاء';
+    return;
+  }
+
+  let m;
+  try{ m=makeMatrix(t.build(v),levelFor(o)); }
+  catch(e){ return showErr('النص طويل جداً، قلّله وحاول مرة أخرى.'); }
+  const c=drawQR(m,o,o.frame);
+  if(isPremium) lastSvg=buildSvg(m,o,o.frame);
+  showCanvas(c,o.bg,{svg:true,fit:true});
 };
 
 function blobOf(){return new Promise(r=>finalCanvas.toBlob(r,'image/png'));}
 $('dl').onclick=async()=>{
+  if(zipBlob) return downloadBlob(zipBlob,'qr-tables.zip');
   if(!finalCanvas) return;
-  const b=await blobOf(), a=document.createElement('a');
-  a.href=URL.createObjectURL(b); a.download='code.png';
-  document.body.appendChild(a); a.click(); a.remove();
+  downloadBlob(await blobOf(),(current==='barcode'?'barcode':'qr')+'.png');
+};
+$('svgBtn').onclick=()=>{
+  if(!isPremium) return showUpgrade();
+  if(lastSvg) downloadBlob(new Blob([lastSvg],{type:'image/svg+xml'}),'qr.svg');
 };
 $('share').onclick=async()=>{
   if(!finalCanvas) return;
@@ -252,34 +332,49 @@ $('share').onclick=async()=>{
 let logoImg=null;
 $('logoFile').onchange=e=>{
   const f=e.target.files[0]; if(!f){logoImg=null;$('logoLbl').textContent='اضغط لاختيار صورة الشعار';return;}
-  const im=new Image(); im.onload=()=>{logoImg=im;$('logoLbl').textContent='تم اختيار الشعار ✓';};
+  const im=new Image(); im.onload=()=>{logoImg=im;$('logoLbl').textContent='تم اختيار الشعار ✓ (اضغط للتغيير)';};
   im.src=URL.createObjectURL(f);
 };
 
+function usage(){const k='u_'+new Date().toISOString().slice(0,10);return {k,n:+localStorage.getItem(k)||0};}
+function waOpen(msg){
+  if(!WA_NUMBER) return alert('ضع رقم واتساب في إعدادات الملف (WA_NUMBER).');
+  window.open('https://wa.me/'+WA_NUMBER+'?text='+encodeURIComponent(msg),'_blank');
+}
+function showUpgrade(){ $('upgrade').scrollIntoView({behavior:'smooth'}); }
+function applyPlan(){
+  $('upgrade').style.display=isPremium?'none':'block';
+  $('premBadge').style.display=isPremium?'block':'none';
+  if(isPremium) $('premBadge').textContent='⭐ النسخة المميزة مفعّلة حتى '+new Date(+localStorage.getItem('lic_exp')).toLocaleDateString('ar-EG');
+  $('upBtn').textContent='اشترك الآن — '+PREMIUM_PRICE;
+  $('payInfo').innerHTML='الدفع عبر <b>فودافون كاش</b> على الرقم <b dir="ltr">'+PAY_NUMBER+'</b>، ثم ابعت صورة التحويل على واتساب وهيوصلك كود التفعيل.';
+  $('styleBox').classList.toggle('locked',!isPremium);
+  $('logoBox').classList.toggle('locked',!isPremium);
+  $('quota').textContent=isPremium?'':('متبقي لك اليوم: '+Math.max(0,FREE_DAILY_LIMIT-usage().n)+' من '+FREE_DAILY_LIMIT+' (🔒 الميزات المتقدمة للمميزة)');
+}
+// ===== نظام أكواد التفعيل =====
+function h53(str,seed=7){let h1=0xdeadbeef^seed,h2=0x41c6ce57^seed;for(let i=0,c;i<str.length;i++){c=str.charCodeAt(i);h1=Math.imul(h1^c,2654435761);h2=Math.imul(h2^c,1597334677);}h1=Math.imul(h1^(h1>>>16),2246822507)^Math.imul(h2^(h2>>>13),3266489909);h2=Math.imul(h2^(h2>>>16),2246822507)^Math.imul(h1^(h1>>>13),3266489909);return (4294967296*(2097151&h2)+(h1>>>0)).toString(36);}
+const LICENSES={"2ubd8t6i9b":30,"zjuu82v7ko":30,"27iam9zt8xj":30,"13b5e1hd4lr":30,"225yjn88jc6":30,"111putmhd0s":30,"133q61rmhsf":30,"5yn6sofro":30,"7uv80hxaja":30,"w97gy8sz02":30,"blz22jdh6f":30,"1d0aug3fcix":30,"6zm1qfevyq":30,"18o0p0vhty8":30,"vzoxp1y6i4":30,"u1lbp74ohz":30,"1dymzo8fqr3":30,"hv8swos8ql":30,"k0hbrcsykt":30,"1hspmaojk25":30,"b4ou4bmm8k":365,"26xe6rq8pl5":365,"171nocibyav":365,"rxn8nctp6n":365,"2ggbnksmyqt":365};
+function loadLicense(){ isPremium=(+localStorage.getItem('lic_exp')||0)>Date.now(); }
+$('actBtn').onclick=()=>{
+  const code=$('actCode').value.trim().toUpperCase().replace(/\s/g,'');
+  const days=LICENSES[h53(code)];
+  if(!days){ $('actMsg').textContent='الكود غير صحيح.'; return; }
+  localStorage.setItem('lic_exp',Date.now()+days*864e5);
+  $('actMsg').textContent=''; loadLicense(); applyPlan(); window.scrollTo({top:0,behavior:'smooth'});
+};
+$('styleBox').addEventListener('click',()=>{if(!isPremium)showUpgrade();});
+$('logoBox').addEventListener('click',()=>{if(!isPremium)showUpgrade();});
+$('upBtn').onclick=()=>waOpen('السلام عليكم، عايز أشترك في النسخة المميزة وأستلم كود التفعيل.');
+
 $('shareApp').onclick=async()=>{
-  const data={title:'مولّد QR والباركود',url:location.href.split('#')[0]};
+  const data={title:'مولّد QR والباركود',text:'جرّب تطبيق مولّد QR والباركود، مجاني وسريع:',url:location.href.split('#')[0]};
   if(navigator.share){ try{await navigator.share(data);}catch(e){} }
-  else{ try{await navigator.clipboard.writeText(data.url); alert('تم نسخ الرابط');}catch(e){} }
+  else{ try{await navigator.clipboard.writeText(data.url); alert('تم نسخ الرابط');}catch(e){ prompt('انسخ الرابط:',data.url);} }
 };
 
-if ('serviceWorker' in navigator) {
-  navigator.serviceWorker.register('sw.js').catch(()=>{});
-}
-let deferredPrompt;
-window.addEventListener('beforeinstallprompt', (e) => {
-  e.preventDefault();
-  deferredPrompt = e;
-  $('installBtn').style.display = 'block';
-});
-$('installBtn').onclick = async () => {
-  if (deferredPrompt) {
-    deferredPrompt.prompt();
-    const { outcome } = await deferredPrompt.userChoice;
-    if (outcome === 'accepted') { $('installBtn').style.display = 'none'; }
-    deferredPrompt = null;
-  }
-};
+
+loadLicense(); renderTabs(); renderFields(); applyPlan();
 </script>
 </body>
 </html>
-
